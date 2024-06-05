@@ -3,13 +3,18 @@ require 'find'
 class Survey
   EXCLUDED_DIRECTORIES = %w[assets config images stylesheets channels application_cable views].freeze
 
-  def initialize(rails_root = '.', logging = false)
+  def initialize(rails_root, logging = false)
     @directory = File.join(rails_root, 'app')
     @files_and_methods = {}
     @logging = logging
   end
 
   def list_files_and_methods
+    unless Dir.exist?(@directory)
+      puts "Error: Directory #{@directory} does not exist."
+      exit 1
+    end
+
     puts "Starting survey in directory: #{@directory}" if @logging
     
     current_directory = nil
@@ -70,8 +75,19 @@ end
 
 # Script entry point
 if __FILE__ == $PROGRAM_NAME
-  rails_root = ARGV[0] || '.'
+  if ARGV.empty?
+    puts "Usage: ruby survey.rb <path_to_rails_root> [logging]"
+    exit 1
+  end
+
+  rails_root = ARGV[0]
   logging = ARGV[1] == 'true' # Optional logging parameter, default to false
+
+  unless Dir.exist?(rails_root)
+    puts "Error: Directory #{rails_root} does not exist."
+    exit 1
+  end
+
   survey = Survey.new(rails_root, logging)
   survey.run
 end
